@@ -45,10 +45,6 @@ body{font-family:-apple-system,BlinkMacSystemFont,'PingFang SC','Microsoft YaHei
 .witem{padding:16px 18px;margin:6px 10px;cursor:pointer;display:flex;justify-content:space-between;align-items:center;font-size:.85em;font-weight:600;transition:all .2s;border-radius:12px;border:1px solid transparent;gap:10px;line-height:1.4}
 .witem:hover{background:#f0f4ff;border-color:rgba(88,101,242,.15);transform:translateX(2px)}
 .witem.active{background:linear-gradient(135deg,rgba(88,101,242,.08),rgba(139,92,246,.05));color:var(--accent);font-weight:700;border-color:rgba(88,101,242,.2);box-shadow:0 2px 8px rgba(88,101,242,.08)}
-.witem .wstar{font-size:.85em;cursor:pointer;flex-shrink:0;transition:.15s;opacity:.3}
-.witem:hover .wstar{opacity:.6}
-.witem .wstar:hover{transform:scale(1.2);opacity:1}
-.witem .wstar.on{opacity:1;color:#f59e0b}
 .pagination{display:flex;justify-content:space-between;align-items:center;padding:10px 18px;border-top:1px solid var(--border);font-size:.7em;color:var(--sub)}
 .pagination button{padding:5px 14px;border-radius:8px;border:1px solid var(--border);background:#fff;cursor:pointer;font-size:.9em;transition:.15s;font-weight:600}
 .pagination button:hover{border-color:var(--accent);color:var(--accent)}
@@ -60,8 +56,6 @@ body{font-family:-apple-system,BlinkMacSystemFont,'PingFang SC','Microsoft YaHei
 .rhead h2{font-size:1.5em;font-weight:800;letter-spacing:-.5px;margin-bottom:12px}
 .rhead .rmeta{display:flex;align-items:center;gap:12px}
 .rhead .rbadge{font-size:.8em;padding:5px 14px;border-radius:10px;background:#f0f4ff;color:var(--accent);font-weight:600}
-.rhead .rfav{font-size:1.1em;cursor:pointer;transition:.15s}
-.rhead .rfav:hover{transform:scale(1.2)}
 .module{margin-bottom:24px}
 .mhead{display:flex;align-items:center;gap:10px;margin-bottom:12px;font-size:.9em;font-weight:700;color:var(--text)}
 .mhead svg{color:var(--accent);flex-shrink:0;width:18px;height:18px}
@@ -162,22 +156,18 @@ var cats=[],catMap={};
 DB.forEach(function(item){if(!catMap[item.c]){catMap[item.c]=[];cats.push(item.c)};catMap[item.c].push(item)});
 
 var curCat='all',curWord=null,curPage=0,perPage=15;
-var favorites=JSON.parse(localStorage.getItem('sl_favs')||'[]');
-function isFav(w){return favorites.indexOf(w)!==-1}
-function toggleFav(w){var idx=favorites.indexOf(w);if(idx===-1)favorites.push(w);else favorites.splice(idx,1);localStorage.setItem('sl_favs',JSON.stringify(favorites));applyFilters()}
 
 function renderTabs(){
-  var icns={全部:['📋','随机浏览'],产业发展类:['🏭','经济·产业·升级'],基层治理类:['🏘️','社区·网格·自治'],政府治理类:['🏛️','放管服·政务·监管'],文化发展类:['🎨','文化·自信·传承'],生态治理类:['🌿','绿色·低碳·环保'],社会民生类:['❤️','教育·医疗·养老'],科技创新类:['💡','创新·数字·转化'],fav:['⭐','已收藏词条']};
+  var icns={全部:['📋','随机浏览'],产业发展类:['🏭','经济·产业·升级'],基层治理类:['🏘️','社区·网格·自治'],政府治理类:['🏛️','放管服·政务·监管'],文化发展类:['🎨','文化·自信·传承'],生态治理类:['🌿','绿色·低碳·环保'],社会民生类:['❤️','教育·医疗·养老'],科技创新类:['💡','创新·数字·转化']};
   var html='<div class="tab'+(curCat==='all'?' active':'')+'" onclick="selCat(\'all\')"><div class="ticon">'+icns['全部'][0]+'</div><div><div class="tname">全部</div><div class="tdesc">'+icns['全部'][1]+'</div></div></div>';
   cats.forEach(function(c){var ic=icns[c]||['📄',''];html+='<div class="tab'+(curCat===c?' active':'')+'" onclick="selCat(\''+c+'\')"><div class="ticon">'+ic[0]+'</div><div><div class="tname">'+c+'</div><div class="tdesc">'+ic[1]+'</div></div></div>'});
-  if(favorites.length>0)html+='<div class="tab'+(curCat==='fav'?' active':'')+'" onclick="selCat(\'fav\')"><div class="ticon">⭐</div><div><div class="tname">我的收藏</div><div class="tdesc">'+icns.fav[1]+'</div></div></div>';
-  document.getElementById('catTabs').innerHTML=html;
+document.getElementById('catTabs').innerHTML=html;
 }
 
 function selCat(c){curCat=c;curPage=0;curWord=null;renderTabs();applyFilters();document.getElementById('rightContent').innerHTML='<div class="empty-hint"><svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="var(--sub)" stroke-width="1.2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg><p>👈 左侧选择一个规范词查看详情</p></div>'}
 
 function getFiltered(){
-  var pool;if(curCat==='all')pool=DB.slice();else if(curCat==='fav')pool=DB.filter(function(item){return isFav(item.w)});else pool=(catMap[curCat]||[]).slice();
+  var pool;if(curCat==='all')pool=DB.slice();else pool=(catMap[curCat]||[]).slice();
   var gs=document.getElementById('globalSearch').value.trim().toLowerCase(),sf=document.getElementById('sideFilter').value.trim().toLowerCase();
   if(gs)pool=pool.filter(function(item){return item.w.indexOf(gs)!==-1||item.s.indexOf(gs)!==-1||item.d.indexOf(gs)!==-1});
   if(sf)pool=pool.filter(function(item){return item.w.indexOf(sf)!==-1||item.s.indexOf(sf)!==-1});
@@ -186,10 +176,10 @@ function getFiltered(){
 
 function applyFilters(){
   var pool=getFiltered(),total=pool.length,pages=Math.ceil(total/perPage)||1;if(curPage>=pages)curPage=0;
-  document.getElementById('sideCatTitle').textContent=curCat==='all'?'全部':(curCat==='fav'?'我的收藏':curCat);
+  document.getElementById('sideCatTitle').textContent=curCat==='all'?'全部':curCat;
   document.getElementById('sideTotal').textContent='共 '+total+' 个规范词';
   var start=curPage*perPage,pageItems=pool.slice(start,start+perPage),html='';
-  pageItems.forEach(function(item){var fav=isFav(item.w);html+='<div class="witem'+(curWord===item.w?' active':'')+'" onclick="selectWord(\''+item.w+'\')"><span>'+item.w+'</span><span class="wstar'+(fav?' on':'')+'" onclick="event.stopPropagation();toggleFav(\''+item.w+'\')">'+(fav?'★':'☆')+'</span></div>'});
+  pageItems.forEach(function(item){html+='<div class="witem'+(curWord===item.w?' active':'')+'" onclick="selectWord(\''+item.w+'\')"><span>'+item.w+'</span></div>'});
   document.getElementById('wordList').innerHTML=html||'<div style="padding:40px 20px;text-align:center;color:var(--sub);font-size:.78em">无匹配结果</div>';
   document.getElementById('pageInfo').textContent=(curPage+1)+' / '+pages;
   document.getElementById('btnPrev').disabled=curPage===0;document.getElementById('btnNext').disabled=curPage>=pages-1;
@@ -202,8 +192,8 @@ function pageNext(){var pages=Math.ceil(getFiltered().length/perPage)||1;if(curP
 function selectWord(w){curWord=w;applyFilters();showWord(w)}
 
 function showWord(w){
-  var item=DB.find(function(x){return x.w===w});if(!item)return;var fav=isFav(w);
-  var html='<div class="rhead"><h2>'+item.w+'</h2><div class="rmeta"><span class="rbadge">'+item.c+'</span><span class="rfav" onclick="toggleFav(\''+item.w+'\');showWord(\''+item.w+'\')" title="收藏">'+(fav?'⭐':'☆')+'</span></div></div>';
+  var item=DB.find(function(x){return x.w===w});if(!item)return;
+  var html='<div class="rhead"><h2>'+item.w+'</h2><div class="rmeta"><span class="rbadge">'+item.c+'</span></div></div>';
   html+='<div class="module"><div class="mhead"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>原文场景</div><div class="mbody">'+item.s+'</div></div>';
   html+='<div class="module"><div class="mhead"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>常见搭配</div><div class="tags-row">';
   item.co.forEach(function(t){html+='<span class="tag-chip">'+t+'</span>'});html+='</div></div>';
